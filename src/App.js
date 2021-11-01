@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
@@ -20,10 +21,12 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import { Typography, Box, Grid } from "@mui/material";
+import { Typography, Box, Grid, Button } from "@mui/material";
+import Checkbox from "@mui/material/Checkbox";
 
 function App() {
   const [applicants, setApplicants] = useState([]);
+  const [selected, setSelected] = useState({});
 
   const firebaseApp = initializeApp({
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -46,32 +49,29 @@ function App() {
   const auth = getAuth(firebaseApp);
   const storage = getStorage(firebaseApp);
 
-  async function handleChange(event, status) {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const text = e.target.result;
-      console.log(text);
-      const arr = text.split("\n");
-      const userDocs = await getDocs(collection(db, "users"));
-      let insert = {};
-      console.log(arr);
-      if (status === "accepted") {
-        insert = { accepted: true };
-      } else {
-        insert = { rejected: true };
-      }
-      console.log(insert);
-      if (userDocs) {
-        userDocs.docs.forEach(async (user) => {
-          if (arr.includes(user.data().email)) {
-            await setDoc(doc(db, "users", user.id), insert, {
-              merge: true,
-            });
-          }
-        });
-      }
-    };
-    reader.readAsText(event.target.files[0]);
+  async function handleChange(status) {
+    const arr = Object.keys(selected).filter((k) => selected[k]);
+    const userDocs = await getDocs(collection(db, "users"));
+    let insert = {};
+    if (status === "accepted") {
+      insert = { accepted: true };
+    } else {
+      insert = { rejected: true };
+    }
+    if (userDocs) {
+      userDocs.docs.forEach(async (user) => {
+        if (arr.includes(user.data().email)) {
+          await setDoc(doc(db, "users", user.id), insert, {
+            merge: true,
+          });
+        }
+      });
+    }
+    setApplicants(
+      applicants.filter((obj) => {
+        return !arr.includes(obj.email);
+      })
+    );
   }
 
   useEffect(() => {
@@ -87,7 +87,8 @@ function App() {
       if (userDocs) {
         userDocs.docs.forEach(async (user) => {
           if (!user.data().accepted && !user.data().rejected) {
-            setApplicants([...applicants, user.data()]);
+            user.data().id = user.data().email;
+            setApplicants((applicants) => [...applicants, user.data()]);
           }
         });
       }
@@ -98,37 +99,9 @@ function App() {
   return (
     <>
       <Grid container>
-        <Grid item xs={6}>
-          <Box p={1}>
-            <Typography variant="h3">Accept</Typography>
-          </Box>
-          <Box p={1}>
-            <input
-              type="file"
-              name="file"
-              onChange={(e) => {
-                handleChange(e, "accepted");
-              }}
-            />
-          </Box>
-        </Grid>
-        <Grid item xs={6}>
-          <Box p={1}>
-            <Typography variant="h3">Reject</Typography>
-          </Box>
-          <Box p={1}>
-            <input
-              type="file"
-              name="file"
-              onChange={(e) => {
-                handleChange(e, "rejected");
-              }}
-            />
-          </Box>
-        </Grid>
         <Grid item xs={12}>
           <Box p={1} pt={4}>
-            <Typography variant="h3">Undecided Applicants</Typography>
+            <Typography variant="h3">ATS - Undecided Applicants</Typography>
           </Box>
         </Grid>
       </Grid>
@@ -136,12 +109,13 @@ function App() {
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
-              <TableCell>First Name</TableCell>
-              <TableCell>Last Name</TableCell>
+              <TableCell></TableCell>
+              <TableCell>First name</TableCell>
+              <TableCell>Last name</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>First Hackathon</TableCell>
-              <TableCell>Prior XP</TableCell>
-              <TableCell>Why This Hack</TableCell>
+              <TableCell>First hackathon?</TableCell>
+              <TableCell>Prior experience?</TableCell>
+              <TableCell>Why this hackathon?</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -150,6 +124,18 @@ function App() {
                 key={applicant.email}
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
               >
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    id={applicant.email}
+                    color="primary"
+                    onChange={(e) => {
+                      setSelected({
+                        ...selected,
+                        [e.target.id]: !selected[e.target.id],
+                      });
+                    }}
+                  />
+                </TableCell>
                 <TableCell>{applicant.firstName}</TableCell>
                 <TableCell>{applicant.lastName}</TableCell>
                 <TableCell>{applicant.email}</TableCell>
@@ -161,6 +147,33 @@ function App() {
           </TableBody>
         </Table>
       </TableContainer>
+      <Grid container direction="column" alignItems="center">
+        <Box pt={2}>
+          <Typography variant="h4">WARNING: These actions cannot be undone!</Typography>
+        </Box>
+        <Grid item xs={6}>
+          <Box pt={2}>
+            <Button
+              onClick={() => {
+                handleChange("accepted");
+              }}
+            >
+              Accept selected
+            </Button>
+          </Box>
+        </Grid>
+        <Grid item xs={6}>
+          <Box pt={2}>
+            <Button
+              onClick={() => {
+                handleChange("rejected");
+              }}
+            >
+              Reject selected
+            </Button>
+          </Box>
+        </Grid>
+      </Grid>
     </>
   );
 }
