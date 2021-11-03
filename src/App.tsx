@@ -18,7 +18,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   TextField,
   Checkbox,
   Paper,
