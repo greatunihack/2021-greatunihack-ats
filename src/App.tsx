@@ -29,6 +29,7 @@ import {
   TableBody,
   Table,
 } from "@mui/material";
+import axios from "axios";
 
 interface Applicant {
   firstName: string;
@@ -86,6 +87,14 @@ function App() {
         }
       });
     }
+    axios
+      .post("/.netlify/functions/email", {
+        emails: JSON.stringify(arr),
+        messageType: status,
+      })
+      .catch((e: any) => {
+        alert(e);
+      });
     setApplicants(
       applicants.filter((obj) => {
         return !arr.includes(obj.email);
@@ -186,9 +195,6 @@ function App() {
           }}
         >
           <DialogContent>
-            <DialogContentText>
-              Please enter your password to proceed
-            </DialogContentText>
             <TextField
               autoFocus
               margin="dense"
@@ -245,7 +251,7 @@ function App() {
                 }
               }}
             >
-              Submit
+              Log in
             </Button>
           </DialogActions>
         </Dialog>
