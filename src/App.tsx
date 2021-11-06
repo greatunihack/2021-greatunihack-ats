@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from "react";
 import {
   collection,
@@ -46,6 +47,9 @@ function App() {
   const [selected, setSelected] = useState<SelectedApplicants>({});
   const [passwordPopup, setPasswordPopup] = useState(true);
   const [password, setPassword] = useState("");
+  const [totalApplicants, setTotalApplicants] = useState(0);
+  const [undecidedApplicants, setUndecidedApplicants] = useState(0);
+  const [buttonDisabled, setButtonDisabled] = useState(false);
 
   const firebaseApp = initializeApp({
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -77,15 +81,18 @@ function App() {
     } else {
       insert = { rejected: true };
     }
+    let counter = 0;
     if (userDocs) {
       userDocs.docs.forEach(async (user) => {
         if (arr.includes(user.data().email)) {
+          counter += 1;
           await setDoc(doc(db, "users", user.id), insert, {
             merge: true,
           });
         }
       });
     }
+    setUndecidedApplicants((applicants: number) => applicants - counter);
     axios
       .post("/.netlify/functions/email", {
         emails: JSON.stringify(arr),
@@ -101,15 +108,29 @@ function App() {
     );
   }
 
+  function handleChange2() {
+    console.log("...");
+  }
+
   return (
     <>
       {!passwordPopup ? (
         <>
           <Grid container>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <Box p={1}>
-                <Typography variant="h3">
-                  Hackathon ATS - Undecided Applicants
+                <Typography variant="h3">Undecided Applicants</Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={3}>
+              <Box p={1}>
+                <Typography variant="h5">Total: {totalApplicants} </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={3}>
+              <Box p={1}>
+                <Typography variant="h5">
+                  Undecided: {undecidedApplicants}
                 </Typography>
               </Box>
             </Grid>
@@ -166,7 +187,8 @@ function App() {
               <Box pt={2}>
                 <Button
                   onClick={() => {
-                    handleChange("accepted");
+                    // handleChange("accepted");
+                    handleChange2();
                   }}
                 >
                   Accept selected
@@ -177,7 +199,8 @@ function App() {
               <Box pt={2}>
                 <Button
                   onClick={() => {
-                    handleChange("rejected");
+                    // handleChange("rejected");
+                    handleChange2();
                   }}
                 >
                   Reject selected
@@ -187,12 +210,7 @@ function App() {
           </Grid>
         </>
       ) : (
-        <Dialog
-          open={passwordPopup}
-          onClose={() => {
-            setPasswordPopup(false);
-          }}
-        >
+        <Dialog open={passwordPopup}>
           <DialogContent>
             <TextField
               autoFocus
@@ -209,7 +227,9 @@ function App() {
           </DialogContent>
           <DialogActions>
             <Button
+              disabled={buttonDisabled}
               onClick={async () => {
+                setButtonDisabled(true);
                 if (
                   process.env.REACT_APP_EMAIL &&
                   process.env.REACT_APP_PWD &&
@@ -225,9 +245,13 @@ function App() {
                       alert(e);
                     }
                   );
+                  let totalCounter = 0;
+                  let undecidedCounter = 0;
                   if (userDocs) {
                     userDocs.docs.forEach(async (user) => {
+                      totalCounter += 1;
                       if (!user.data().accepted && !user.data().rejected) {
+                        undecidedCounter += 1;
                         user.data().id = user.data().email;
                         const currApplicant: Applicant = {
                           firstName: user.data().firstName,
@@ -245,6 +269,8 @@ function App() {
                     });
                   }
                   setPasswordPopup(false);
+                  setTotalApplicants(totalCounter);
+                  setUndecidedApplicants(undecidedCounter);
                 } else {
                   window.location.reload();
                 }
