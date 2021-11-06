@@ -108,10 +108,6 @@ function App() {
     );
   }
 
-  function handleChange2() {
-    console.log("...");
-  }
-
   return (
     <>
       {!passwordPopup ? (
@@ -178,7 +174,7 @@ function App() {
             </Table>
           </TableContainer>
           <Grid container direction="column" alignItems="center">
-            <Box pt={2}>
+            {/* <Box pt={2}>
               <Typography variant="h4">
                 WARNING: These actions cannot be undone!
               </Typography>
@@ -187,8 +183,7 @@ function App() {
               <Box pt={2}>
                 <Button
                   onClick={() => {
-                    // handleChange("accepted");
-                    handleChange2();
+                    handleChange("accepted");
                   }}
                 >
                   Accept selected
@@ -199,14 +194,13 @@ function App() {
               <Box pt={2}>
                 <Button
                   onClick={() => {
-                    // handleChange("rejected");
-                    handleChange2();
+                    handleChange("rejected");
                   }}
                 >
                   Reject selected
                 </Button>
               </Box>
-            </Grid>
+            </Grid> */}
           </Grid>
         </>
       ) : (
