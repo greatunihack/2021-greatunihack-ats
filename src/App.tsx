@@ -74,6 +74,8 @@ function App() {
 
   async function handleChange(status: string) {
     const arr = Object.keys(selected).filter((k: string) => selected[k]);
+    console.log(status);
+    console.log(JSON.stringify(arr));
     const userDocs = await getDocs(collection(db, "users"));
     let insert = {};
     if (status === "accepted") {
@@ -174,7 +176,7 @@ function App() {
             </Table>
           </TableContainer>
           <Grid container direction="column" alignItems="center">
-            {/* <Box pt={2}>
+            <Box pt={2}>
               <Typography variant="h4">
                 WARNING: These actions cannot be undone!
               </Typography>
@@ -200,7 +202,7 @@ function App() {
                   Reject selected
                 </Button>
               </Box>
-            </Grid> */}
+            </Grid>
           </Grid>
         </>
       ) : (
