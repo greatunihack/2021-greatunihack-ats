@@ -74,6 +74,7 @@ function App() {
 
   async function handleChange(status: string) {
     const arr = Object.keys(selected).filter((k: string) => selected[k]);
+    setSelected({});
     console.log(status);
     console.log(JSON.stringify(arr));
     const userDocs = await getDocs(collection(db, "users"));
