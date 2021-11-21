@@ -1,8 +1,8 @@
-const client = require("@sendgrid/mail");
+const nodemailer = require("nodemailer");
 
 exports.handler = async function (event) {
   const { emails, messageType } = JSON.parse(event.body);
-  client.setApiKey(process.env.SENDGRID_API_KEY);
+
   let message = "";
   let subject = "";
   if (messageType === "accepted") {
@@ -11,17 +11,27 @@ exports.handler = async function (event) {
   } else {
     subject = `Update on ${process.env.HACKATHON_NAME} application`;
     message = `<!DOCTYPE html><html lang="en"> <head> <meta charset="UTF-8"/> <meta name="viewport" content="width=device-width, initial-scale=1"/> </head> <body> <p>Dear applicant,</p><p> Thank you for your application to GreatUniHack 2021. We regret to inform you your application was unsuccessful. </p><p> We receive many fantastic applications, and can only accept a limited number of participants each year. Keep on coding, and make sure to apply next year! </p><p>Kind regards,</p><p>The UniCS Team</p></body></html>`;
-
   }
+
+  let transporter = nodemailer.createTransport({
+    host: "premium61.web-hosting.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.FROM_EMAIL,
+      pass: process.env.FROM_EMAIL_PASSWORD,
+    },
+  });
+  const emailList = JSON.parse(emails);
+
   try {
-    await client.sendMultiple({
-      from: {
-        email: process.env.FROM_EMAIL,
-        name: `${process.env.HACKATHON_NAME_SHORT} Team`,
-      },
-      to: JSON.parse(emails),
-      subject: subject,
-      html: message,
+    emailList.forEach(async (email) => {
+      await transporter.sendMail({
+        from: `"${process.env.HACKATHON_NAME_SHORT} Team" <${process.env.FROM_EMAIL}>`,
+        to: email,
+        subject: subject,
+        html: message,
+      });
     });
     return {
       statusCode: 200,
