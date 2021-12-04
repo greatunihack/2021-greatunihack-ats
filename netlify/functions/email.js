@@ -15,32 +15,29 @@ exports.handler = async function (event) {
 
   let transporter = nodemailer.createTransport({
     host: "premium61.web-hosting.com",
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.FROM_EMAIL,
       pass: process.env.FROM_EMAIL_PASSWORD,
     },
   });
+
   const emailList = JSON.parse(emails);
 
-  try {
-    emailList.forEach(async (email) => {
-      await transporter.sendMail({
-        from: `"${process.env.HACKATHON_NAME_SHORT} Team" <${process.env.FROM_EMAIL}>`,
-        to: email,
-        subject: subject,
-        html: message,
-      });
+  await transporter
+    .sendMail({
+      from: `"${process.env.HACKATHON_NAME_SHORT} Team" <${process.env.FROM_EMAIL}>`,
+      to: emailList,
+      subject: subject,
+      html: message,
+    })
+    .catch((err) => {
+      console.log(err);
     });
-    return {
-      statusCode: 200,
-      body: "Success",
-    };
-  } catch (err) {
-    return {
-      statusCode: err.code,
-      body: JSON.stringify({ msg: err.message }),
-    };
-  }
+
+  return {
+    statusCode: 200,
+    body: "Success",
+  };
 };
